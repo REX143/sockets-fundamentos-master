@@ -19,21 +19,24 @@ io.on('connection', (client) => {
 
         usuarios.agregarPersona(client.id, data.nombre, data.sala )
         client.broadcast.to(data.sala).emit('listaPersonas', usuarios.getPersonasPorSala(data.sala))
+        client.broadcast.to(data.sala).emit('crearMensaje', crearMensaje('Admin', `${data.nombre} se unío a la sala.`));
         callback(usuarios.getPersonasPorSala(data.sala));
     })
 
-    client.on('crearMensaje', (data)=>{
+    client.on('crearMensaje', (data, callback)=>{
         let persona = usuarios.getPersona(client.id);
 
         let mensaje = crearMensaje(persona.nombre, data.mensaje);
-        client.broadcast.to(persona.sala).emit('crearMensaje', mensaje)
-    })
+        client.broadcast.to(persona.sala).emit('crearMensaje', mensaje);
+       
+        callback(mensaje);
+    });
 
     client.on('disconnect', ()=>{
         let personaBorrada = usuarios.borrarPersona(client.id)
-        console.log('borrada exitosamente:', personaBorrada)
+        // console.log('borrada exitosamente:', personaBorrada)
         client.broadcast.to(personaBorrada.sala).emit('crearMensaje', crearMensaje('Admin', `${personaBorrada.nombre} salío.`));
-        client.broadcast.to(personaBorrada.sala).emit('listaPersonas', usuarios.getPersonasPorSala())
+        client.broadcast.to(personaBorrada.sala).emit('listaPersonas', usuarios.getPersonasPorSala(personaBorrada.sala))
     })
 
     //mensajes privados
